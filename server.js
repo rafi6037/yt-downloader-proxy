@@ -23,22 +23,22 @@ app.get('/download', async (req, res) => {
       });
     }
 
-    const requestBody = {
-      url,
+    const body = {
+      url: url,
       audioOnly: format === 'mp3'
     };
 
-    console.log('Sending:', requestBody);
+    console.log('Sending:', body);
 
     const response = await fetch(
-      'https://api-cobalt.is-an.org/',
+      'https://api.cobalt.tools/',
       {
         method: 'POST',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(body)
       }
     );
 
@@ -46,13 +46,18 @@ app.get('/download', async (req, res) => {
 
     console.log('Response:', data);
 
-    if (!response.ok || data.status === 'error') {
+    if (!response.ok) {
+      return res.status(response.status).json({
+        success: false,
+        error: data.text || 'Cobalt error',
+        details: data
+      });
+    }
+
+    if (!data.url) {
       return res.status(500).json({
         success: false,
-        error:
-          data.text ||
-          data.error ||
-          'Download failed',
+        error: 'No download URL found',
         details: data
       });
     }
