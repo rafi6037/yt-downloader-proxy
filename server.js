@@ -8,16 +8,10 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-/**
- * Home route
- */
 app.get('/', (req, res) => {
   res.send('YT Downloader Proxy Running 🎵');
 });
 
-/**
- * Download route
- */
 app.get('/download', async (req, res) => {
   try {
     const { url, format } = req.query;
@@ -29,31 +23,19 @@ app.get('/download', async (req, res) => {
       });
     }
 
-    const isYoutube =
-      url.includes('youtube.com') ||
-      url.includes('youtu.be');
-
-    if (!isYoutube) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid YouTube URL'
-      });
-    }
-
     const requestBody = {
-      url: url,
-      downloadMode: 'auto',
+      url,
       audioOnly: format === 'mp3'
     };
 
     console.log('Sending:', requestBody);
 
     const response = await fetch(
-      'https://co.wuk.sh/api/json',
+      'https://api-cobalt.is-an.org/',
       {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(requestBody)
@@ -62,7 +44,7 @@ app.get('/download', async (req, res) => {
 
     const data = await response.json();
 
-    console.log('API Response:', data);
+    console.log('Response:', data);
 
     if (!response.ok || data.status === 'error') {
       return res.status(500).json({
@@ -70,21 +52,16 @@ app.get('/download', async (req, res) => {
         error:
           data.text ||
           data.error ||
-          'Download failed'
-      });
-    }
-
-    if (!data.url) {
-      return res.status(500).json({
-        success: false,
-        error: 'No download URL returned',
-        response: data
+          'Download failed',
+        details: data
       });
     }
 
     return res.json({
       success: true,
-      title: data.filename || 'Your Download',
+      title:
+        data.filename ||
+        'Your Download',
       download: data.url
     });
 
