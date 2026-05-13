@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 });
 
 /**
- * Download route using Cobalt API
+ * Download route
  */
 app.get('/download', async (req, res) => {
   try {
@@ -40,41 +40,41 @@ app.get('/download', async (req, res) => {
       });
     }
 
-    /**
-     * Cobalt API request
-     */
+    // Correct Cobalt request
+    const body = {
+      url: url,
+      audioOnly: format === 'mp3',
+      filenameStyle: 'pretty'
+    };
+
+    console.log('Sending to Cobalt:', body);
+
     const response = await fetch(
       'https://api.cobalt.tools/api/json',
       {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0'
         },
-        body: JSON.stringify({
-          url: url,
-          vCodec: 'h264',
-          vQuality: '720',
-          filenamePattern: 'pretty',
-          isAudioOnly: format === 'mp3'
-        })
+        body: JSON.stringify(body)
       }
     );
 
     const data = await response.json();
 
-    console.log(data);
+    console.log('Cobalt Response:', data);
 
     if (!response.ok) {
       return res.status(response.status).json({
         success: false,
-        error: data.error || 'Cobalt API error'
+        error: data.error || 'Cobalt API error',
+        details: data
       });
     }
 
-    /**
-     * Success
-     */
+    // Success
     return res.json({
       success: true,
       title: data.filename || 'Your Download',
